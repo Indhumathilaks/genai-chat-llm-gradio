@@ -22,38 +22,37 @@ Test with diverse inputs to ensure robust performance.
 ### PROGRAM:
 ```
 import gradio as gr
-from transformers import AutoModelForCausalLM, AutoTokenizer
+import openai
+import os
 
-# Load the model and tokenizer
-model_name = "gpt2"  # Replace with your LLM
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForCausalLM.from_pretrained(model_name)
+# Load OpenAI API key securely
+openai.api_key = os.getenv("OPENAI_API_KEY")  # Make sure the environment variable is set
 
-# Function to interact with the model
 def chat_with_llm(user_input):
-    inputs = tokenizer.encode(user_input, return_tensors="pt")
-    outputs = model.generate(inputs, max_length=150, num_return_sequences=1, pad_token_id=tokenizer.eos_token_id)
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    return response
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": user_input}]
+        )
+        return response["choices"][0]["message"]["content"]
+    except Exception as e:
+        return f"Error: {str(e)}"
 
-# Gradio interface using Blocks
-with gr.Blocks() as chat_interface:
-    gr.Markdown("### Chat with LLM")
-    with gr.Row():
-        with gr.Column():
-            user_input = gr.Textbox(placeholder="Type your message here...")
-            send_button = gr.Button("Send")
-        with gr.Column():
-            chatbot = gr.Chatbot()
-    
-    # Define interaction
-    send_button.click(chat_with_llm, inputs=user_input, outputs=chatbot)
-    
-# Launch the interface
-chat_interface.launch()
+# Create Gradio interface
+interface = gr.Interface(
+    fn=chat_with_llm,
+    inputs="text",
+    outputs="text",
+    title="Chat with GPT-4",
+    description="Ask any question and get a response from GPT-4."
+)
+
+# Launch the app
+interface.launch()
 ```
 ### OUTPUT:
-![image](https://github.com/user-attachments/assets/db700c47-2846-4f75-b7f3-4152b1f597a0)
+![image](https://github.com/user-attachments/assets/381cacc4-7fef-477e-b0aa-0ae67ebe9f2a)
+
 
 ### RESULT:
 The "Chat with LLM" application was successfully designed and deployed. The Gradio Blocks framework provided a user-friendly interface, ensuring seamless communication with the large language model.
